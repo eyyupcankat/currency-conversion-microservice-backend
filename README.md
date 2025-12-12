@@ -1,15 +1,23 @@
-### Gallerist – Spring Boot Projesi
+### Proje Hakkında
+Bu repo, Spring Boot tabanlı mikroservis mimarisi içerir. Projede iki işlevsel servis (kur verme ve kurla dönüştürme), bir API Geçidi, ayrıca merkezi konfigürasyon için bir Config Server ve servis keşfi için bir Naming Server (Eureka) vardır.
 
-Bu repo, Spring Boot 3 tabanlı, PostgreSQL kullanan ve JWT ile kimlik doğrulama sağlayan bir örnek web uygulamasıdır.
+### Bileşenler
+- `config-server`: Tüm servislerin konfigürasyonlarını merkezi bir kaynaktan (Git repo, dosya sistemi vb.) sağlar.
+- `naming-server` (Eureka Server): Servis keşfi ve kayıt. Tüm mikroservisler bu sunucuya kaydolur ve birbirlerini isimle bulur.
+- `api-gateway`: Dış trafiği mikroservislere yönlendirir, ortak cross-cutting ihtiyaçları merkezi yönetir. Örnek `LoggingFilter` içerir.
+- `currency-exchange-service`: İki para birimi arasındaki kuru döner. Başlangıç verileri `data.sql` ile yüklenir.
+- `currency-conversion-service`: Exchange servisinden aldığı kurla tutar dönüştürür (Feign/RestTemplate).
 
-### Proje Özeti
-- Ad: `gallerist`
-- Amaç: Eğitim amaçlı bir Spring Boot REST API.
-- Teknolojiler: Spring Boot 3.5, Spring Web, Spring Security, Spring Data JPA, PostgreSQL, JWT (jjwt), Validation, Lombok, Maven
+### Teknolojiler
+- Java 17+
+- Spring Boot (Web, Actuator)
+- Spring Cloud: Config Server, Eureka Discovery, Gateway, OpenFeign/RestTemplate, LoadBalancer
+- Maven
+- H2
 
-### Özellikler
-- JWT tabanlı kimlik doğrulama (Spring Security + jjwt)
-- Kullanıcı işlemleri (örnek: hesap oluşturma arayüzü – `IAccountController`)
-- JPA ile veri erişimi (`UserRepository` vb.)
-- Global hata yönetimi (`GlobalExceptionHandler`)
-- Doğrulama (Jakarta Validation)
+### Mimari Akış
+1. Servisler açılışta `config-server` üzerinden konfigürasyonlarını çeker (örn. `spring.config.import=optional:configserver:`).
+2. Servisler `naming-server` (Eureka) üzerine kayıt olur.
+3. `api-gateway`, istekleri servis isimlerine yönlendirir.
+4. `currency-conversion-service`, `currency-exchange-service`e servis adıyla (Eureka) veya gateway üzerinden çağrı yapar.
+5. Sonuçlar istemciye gateway üzerinden döner.
